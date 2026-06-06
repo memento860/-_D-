@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌱 환경 OX 퀴즈 — D번 기기</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c: #7C3AED;
+    --cl: #EDE9FE;
+    --cd: #4C1D95;
+    --cb: #C4B5FD;
+    --red: #E24B4A; --rl: #FCEBEB; --rb: #F09595;
+    --text: #1a1a1a; --muted: #6b7280;
+    --bg: #f7f9f8; --card: #ffffff; --border: #e5e7eb;
+    --r: 18px; --rs: 11px;
+  }
+  html, body { height:100%; background:var(--bg); font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; color:var(--text); -webkit-tap-highlight-color:transparent; }
+  #app { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding-bottom:48px; }
+
+  .header { width:100%; background:var(--c); padding:22px 20px 26px; text-align:center; color:#fff; }
+  .header-badge { display:inline-block; background:rgba(255,255,255,0.25); border-radius:99px; font-size:12px; font-weight:700; padding:3px 12px; margin-bottom:8px; letter-spacing:1px; }
+  .header-icon { font-size:2.2rem; margin-bottom:4px; }
+  .header-title { font-size:20px; font-weight:700; letter-spacing:-0.3px; }
+  .header-sub { font-size:13px; opacity:.85; margin-top:3px; }
+
+  .progress-wrap { width:100%; max-width:500px; padding:18px 20px 0; }
+  .progress-top { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .pb-bg { height:7px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .pb-fill { height:100%; background:var(--c); border-radius:99px; transition:width .4s ease; }
+
+  .dot-row { display:flex; gap:7px; width:calc(100% - 40px); max-width:500px; margin:12px 20px 0; justify-content:center; }
+  .dot { width:11px; height:11px; border-radius:50%; background:var(--border); transition:background .3s; }
+  .dot.ok { background:var(--c); }
+  .dot.bad { background:var(--red); }
+
+  .card { width:calc(100% - 40px); max-width:500px; background:var(--card); border-radius:var(--r); box-shadow:0 2px 14px rgba(0,0,0,0.08); margin:14px 20px 0; padding:24px 20px 20px; }
+  .cat-badge { display:inline-block; font-size:11px; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--cl); color:var(--cd); margin-bottom:12px; }
+  .q-text { font-size:18px; font-weight:500; line-height:1.65; min-height:76px; letter-spacing:-0.2px; }
+
+  .ox-row { display:flex; gap:12px; margin-top:22px; }
+  .ox-btn { flex:1; padding:20px 0; border-radius:var(--r); border:2px solid var(--border); background:var(--bg); font-size:2.8rem; cursor:pointer; transition:transform .12s,border-color .15s,background .15s; touch-action:manipulation; }
+  .ox-btn:active { transform:scale(0.94); }
+  .ox-btn.correct { border-color:var(--cb); background:var(--cl); }
+  .ox-btn.wrong { border-color:var(--rb); background:var(--rl); }
+  .ox-btn:disabled { cursor:default; transform:none!important; }
+
+  .feedback { display:none; margin-top:16px; border-radius:var(--rs); padding:14px 16px; font-size:14px; line-height:1.65; }
+  .feedback.correct { background:var(--cl); border:1px solid var(--cb); color:var(--cd); }
+  .feedback.wrong { background:var(--rl); border:1px solid var(--rb); color:#501313; }
+  .fb-title { font-weight:700; font-size:15px; margin-bottom:5px; }
+
+  .next-btn { display:none; width:calc(100% - 40px); max-width:500px; margin:14px 20px 0; padding:17px; border-radius:var(--r); border:none; background:var(--c); color:#fff; font-size:16px; font-weight:600; cursor:pointer; letter-spacing:-0.2px; transition:background .15s; }
+  .next-btn:active { background:var(--cd); }
+
+  /* Result */
+  .result { display:none; width:calc(100% - 40px); max-width:500px; margin:16px 20px 0; }
+  .result-card { background:var(--card); border-radius:var(--r); box-shadow:0 2px 14px rgba(0,0,0,0.08); padding:36px 24px; text-align:center; }
+  .res-emoji { font-size:4rem; margin-bottom:12px; }
+  .res-big { font-size:2.4rem; font-weight:700; color:var(--c); margin-bottom:4px; }
+  .res-sub { font-size:14px; color:var(--muted); margin-bottom:8px; }
+  .prize-box { background:var(--cl); border:1.5px solid var(--cb); border-radius:var(--rs); padding:14px 16px; margin:16px 0 20px; }
+  .prize-box .prize-title { font-size:15px; font-weight:700; color:var(--cd); margin-bottom:4px; }
+  .prize-box .prize-desc { font-size:14px; color:var(--cd); line-height:1.6; }
+  .res-msg { font-size:15px; line-height:1.65; white-space:pre-line; margin-bottom:24px; color:var(--text); }
+  .review-wrap { text-align:left; margin-bottom:24px; }
+  .review-title { font-size:14px; font-weight:600; margin-bottom:10px; }
+  .rev-item { display:flex; align-items:flex-start; gap:8px; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; line-height:1.55; }
+  .rev-item:last-child { border-bottom:none; }
+  .rev-dot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .rev-dot.ok { background:var(--c); }
+  .rev-dot.bad { background:var(--red); }
+  .rev-q { font-weight:500; color:var(--text); }
+  .rev-a { font-size:12px; color:var(--muted); margin-top:2px; }
+  .restart-btn { width:100%; padding:16px; border-radius:var(--r); border:2px solid var(--c); background:transparent; color:var(--c); font-size:16px; font-weight:600; cursor:pointer; transition:background .15s,color .15s; }
+  .restart-btn:active { background:var(--c); color:#fff; }
+  .footer { margin-top:20px; font-size:12px; color:var(--muted); text-align:center; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-badge">D번 기기</div>
+    <div class="header-icon">🌿</div>
+    <div class="header-title">환경 OX 퀴즈</div>
+    <div class="header-sub">7문제 중 5문제 이상 정답 → 상품 증정!</div>
+  </div>
+
+  <div class="progress-wrap" id="pw">
+    <div class="progress-top"><span id="qc">1 / 7</span><span id="sc">0점</span></div>
+    <div class="pb-bg"><div class="pb-fill" id="pf" style="width:0%"></div></div>
+  </div>
+  <div class="dot-row" id="dot-row"></div>
+
+  <div class="card" id="quiz-card">
+    <div class="cat-badge" id="cat">환경상식</div>
+    <div class="q-text" id="qt"></div>
+    <div class="ox-row">
+      <button class="ox-btn" id="bo" onclick="ans(true)">⭕</button>
+      <button class="ox-btn" id="bx" onclick="ans(false)">❌</button>
+    </div>
+    <div class="feedback" id="fb"><div class="fb-title" id="fbt"></div><div id="fbd"></div></div>
+  </div>
+  <button class="next-btn" id="nb" onclick="next()">다음 문제 →</button>
+
+  <div class="result" id="result">
+    <div class="result-card">
+      <div class="res-emoji" id="re"></div>
+      <div class="res-big" id="rb2"></div>
+      <div class="res-sub" id="rsub"></div>
+      <div class="prize-box" id="prize-box">
+        <div class="prize-title" id="pt"></div>
+        <div class="prize-desc" id="pd"></div>
+      </div>
+      <div class="res-msg" id="rm"></div>
+      <div class="review-wrap"><div class="review-title">📋 문제 복습</div><div id="rl"></div></div>
+      <button class="restart-btn" onclick="restart()">🔄 다시 풀기</button>
+    </div>
+    <div class="footer">환경주일을 함께해 주셔서 감사합니다 🙏</div>
+  </div>
+</div>
+<script>
+const Q=[{"cat": "환경상식", "q": "바다에 버려진 플라스틱은 해양 생물에게 피해를 주지 않는다.", "ans": false, "desc": "틀렸습니다! 해양 플라스틱은 미세플라스틱으로 분해되어 해양 생물과 생태계에 큰 피해를 줘요."}, {"cat": "환경상식", "q": "태양광과 풍력은 재생가능에너지에 속한다.", "ans": true, "desc": "맞습니다! 태양광·풍력·수력 등은 고갈되지 않는 재생가능에너지예요."}, {"cat": "환경상식", "q": "가까운 거리를 걷거나 자전거를 이용하면 탄소 배출을 줄일 수 있다.", "ans": true, "desc": "맞습니다! 자동차 대신 도보나 자전거를 이용하면 탄소 배출이 크게 줄어요."}, {"cat": "분리배출", "q": "캔은 내용물을 비우기만 하면 바로 배출할 수 있다.", "ans": true, "desc": "맞습니다! 내용물을 비운 캔은 바로 캔류로 배출해도 됩니다."}, {"cat": "분리배출", "q": "라면 봉지는 비닐류로 분리배출할 수 있다.", "ans": true, "desc": "맞습니다! 라면 봉지, 과자 봉지 등은 이물질을 제거하면 비닐류로 배출 가능해요."}, {"cat": "분리배출", "q": "칫솔은 플라스틱이므로 플라스틱류로 배출하면 된다.", "ans": false, "desc": "틀렸습니다! 칫솔은 여러 재질이 혼합돼 있어 재활용이 어렵습니다. 일반쓰레기로 버려야 해요."}, {"cat": "분리배출", "q": "젖은 신문지는 종이류로 재활용할 수 있다.", "ans": false, "desc": "틀렸습니다! 젖거나 오염된 종이는 재활용이 어려워요. 건조 후 배출하거나 일반쓰레기로 버리세요."}];
+let cur=0,score=0,done=false,results=[];
+function buildDots(){const r=document.getElementById('dot-row');r.innerHTML='';Q.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.id='d'+i;r.appendChild(d);});}
+function load(){
+  const q=Q[cur];
+  document.getElementById('qc').textContent=(cur+1)+' / '+Q.length;
+  document.getElementById('sc').textContent=score+'점';
+  document.getElementById('pf').style.width=(cur/Q.length*100)+'%';
+  document.getElementById('cat').textContent=q.cat;
+  document.getElementById('qt').textContent=q.q;
+  document.getElementById('fb').style.display='none';
+  document.getElementById('nb').style.display='none';
+  const bo=document.getElementById('bo'),bx=document.getElementById('bx');
+  bo.disabled=false;bx.disabled=false;bo.className='ox-btn';bx.className='ox-btn';
+  done=false;
+}
+function ans(v){
+  if(done)return; done=true;
+  const q=Q[cur],ok=v===q.ans;
+  if(ok)score++;
+  results.push({q:q.q,ans:q.ans,ok,desc:q.desc});
+  const dot=document.getElementById('d'+cur);
+  if(dot)dot.classList.add(ok?'ok':'bad');
+  const bo=document.getElementById('bo'),bx=document.getElementById('bx');
+  bo.disabled=true;bx.disabled=true;
+  if(ok){(v?bo:bx).classList.add('correct');}
+  else{(v?bo:bx).classList.add('wrong');(q.ans?bo:bx).classList.add('correct');}
+  const fb=document.getElementById('fb');
+  fb.className='feedback '+(ok?'correct':'wrong');
+  document.getElementById('fbt').textContent=ok?'✅ 정답입니다!':'❌ 오답! 정답은 '+(q.ans?'O':'X')+'입니다.';
+  document.getElementById('fbd').textContent=q.desc;
+  fb.style.display='block';
+  document.getElementById('sc').textContent=score+'점';
+  const nb=document.getElementById('nb');
+  nb.style.display='block';
+  nb.textContent=cur<Q.length-1?'다음 문제 →':'결과 보기 →';
+}
+function next(){cur++;if(cur>=Q.length)showResult();else load();}
+function showResult(){
+  document.getElementById('pf').style.width='100%';
+  ['pw','dot-row','quiz-card','nb'].forEach(id=>document.getElementById(id).style.display='none');
+  const rs=document.getElementById('result'); rs.style.display='block';
+  const pct=Math.round(score/Q.length*100);
+  const pass=score>=5;
+  let emoji,msg;
+  if(score===7){emoji='🏆';msg='완벽합니다! 7문제 모두 정답이에요.\n환경 지킴이 인증 완료! 🌍';}
+  else if(pass){emoji='🌱';msg=score+'문제 정답! 상품을 받으세요 🎁\n앞으로도 환경 보호에 함께해요.';}
+  else{emoji='📚';msg='아쉽지만 '+score+'문제 정답이에요.\n다시 도전해보세요! 5문제 이상이면 상품!';}
+  document.getElementById('re').textContent=emoji;
+  document.getElementById('rb2').textContent=score+' / '+Q.length+' 정답';
+  document.getElementById('rsub').textContent='정답률 '+pct+'%';
+  const pb=document.getElementById('prize-box');
+  const pt=document.getElementById('pt');
+  const pd=document.getElementById('pd');
+  if(pass){pt.textContent='🎁 축하합니다! 상품 대상자입니다';pd.textContent='진행 스태프에게 이 화면을 보여주세요.';}
+  else{pb.style.background='#FEF3C7';pb.style.borderColor='#FCD34D';pt.style.color='#92400E';pd.style.color='#92400E';pt.textContent='😊 아쉽지만 다음 기회에!';pd.textContent='5문제 이상 맞추면 상품이 있어요. 다시 도전해봐요!';}
+  document.getElementById('rm').textContent=msg;
+  const rl=document.getElementById('rl');
+  rl.innerHTML='';
+  results.forEach(r=>{
+    const d=document.createElement('div');d.className='rev-item';
+    d.innerHTML='<div class="rev-dot '+(r.ok?'ok':'bad')+'"></div><div><div class="rev-q">'+r.q+'</div><div class="rev-a">정답: '+(r.ans?'O (맞음)':'X (틀림)')+' · '+r.desc+'</div></div>';
+    rl.appendChild(d);
+  });
+}
+function restart(){cur=0;score=0;done=false;results=[];['pw','dot-row','quiz-card'].forEach(id=>document.getElementById(id).style.display='');document.getElementById('result').style.display='none';buildDots();load();}
+buildDots();load();
+</script>
+</body>
+</html>
